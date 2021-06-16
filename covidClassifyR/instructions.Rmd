@@ -1,0 +1,13 @@
+---
+title: "Instructions"
+author: "Shazia Ruybal-Pesántez"
+output: html_document
+---
+
+### **covidClassifyR**: a fit-for-purpose tool to support COVID-19 sero-surveillance via serological data processing and statistical analysis
+
+This analytical tool was developed to streamline the processing of serological data generated using a validated high-throughput multiplex serological assay for measuring antibodies to SARS-CoV-2 (REFS). This tool also aims to make the quality control and interpretation of the raw data generated from this serological assay accessible to all researchers without the need for a specialist background in statistical methods and advanced programming.
+
+![](images/app_design.png)
+
+### Instructions for use

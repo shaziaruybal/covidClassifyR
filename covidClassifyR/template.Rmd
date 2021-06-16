@@ -1,0 +1,75 @@
+---
+title: "Serological Assay Quality Control Report"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: hide
+params:
+  raw_data_filename: NA
+  plate_layout_filename: NA
+  experiment_name: NA
+  experiment_notes: NA
+  date: NA
+  stdcurve_plot: NA
+  plateqc_plot: NA
+  blanks_plot: NA
+  model_results: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = FALSE, message = FALSE, tidy = TRUE)
+require(tidyverse)
+require(readxl)
+require(drc)
+require(janitor)
+require(plyr)
+require(here)
+```
+
+***
+### QC Report for experiment: `r params$experiment_name` analyzed on `r params$date` {.tabset}
+***
+
+#### Plot of standard curves
+```{r}
+params$stdcurve_plot
+```
+
+#### Plot of model results
+```{r}
+model_results <- params$model_results
+
+plots_model <- lapply(seq_along(model_results), function(x){
+    ggplot(data = model_results[[x]], 
+           aes(x = dilution, y = `1`)) + 
+      geom_line() +
+      scale_x_log10(breaks = c(1e-5, 1e-4, 1e-3, 1e-2, 0.03),
+                    labels = c("0.00001", "0.0001", "0.001", "0.01", "0.03")) +
+      labs(x = "antibody dilution",
+           y = "standard curve",
+           title = names(model_results[x])) +
+      theme_bw()
+  })
+  
+gridExtra::grid.arrange(grobs = plots_model, nrow = 3)
+```
+
+#### Plot of bead counts
+Any wells with <15 beads/well are indicated in red, and should be double-checked manually.
+```{r}
+params$plateqc_plot
+```
+
+#### Plot of blank samples
+Blank samples should record MFI<50 for each protein. If any proteins are above the dashed line, they should be double-checked manually.
+```{r}
+params$blanks_plot
+```
+
+#### Experiment info
+
+**Experiment notes:** `r params$experiment_notes`
+
+**Raw data filename:** `r params$raw_data_filename`
+
+**Plate layout filename:** `r params$plate_layout_filename`

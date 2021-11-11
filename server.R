@@ -15,8 +15,13 @@ library(readr)
 library(DT)
 library(janitor)
 library(drc)
+library(randomForest)
+library(pROC)
 
 source("functions.R")
+
+load("algorithms/png_classifiers.Rdata")
+load("algorithms/mel_classifiers.Rdata")
 
 shinyServer(function(input, output, session){
     
@@ -57,10 +62,17 @@ shinyServer(function(input, output, session){
         input$plate_layout_file$name
     })
     
+    algorithm <- reactive({
+        req(input$algorithm)
+        input$algorithm
+    })
+    
     ### print the filenames for cross-checking
     output$raw_data_filename <- renderText(paste0("Raw data filename: ", raw_data_filename()))
-    output$plate_layout_filename <- renderText(paste0("Plate layout filename: ", raw_data_filename()))
+    output$plate_layout_filename <- renderText(paste0("Plate layout filename: ", plate_layout_filename()))
     
+    ### print the algorithm choice for cross-checking
+    output$algorithm_choice <- renderText(paste0("Algorithm choice: ", algorithm()))
     
     ### read imported file and print raw data for checking
     output$alldata <- renderTable({
@@ -100,6 +112,8 @@ shinyServer(function(input, output, session){
         runModel(raw_data(), plate_layout())[[3]]
     })
     
+    
+    #### Output objects
     output$stdcurve <- renderPlot(stdcurve_plot())
     output$plateqc <- renderPlot(plateqc_plot())
     output$blanks <- renderPlot(blanks_plot())
@@ -109,13 +123,31 @@ shinyServer(function(input, output, session){
         runModel(raw_data(), plate_layout())[[2]]
     })
     
+    #### Classification algorithm
+    
+    output$classification_results <- DT::renderDataTable({
+        if(algorithm() == "PNG algorithm"){
+        
+            classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months)
+
+        }
+        
+        else{
+        ##------------ CHANGE THIS LATER
+            classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months)
+            # classifyExposure(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months)
+        
+        }
+    })
+    
+    # Downloadable report of QC ----
     output$report <- downloadHandler(
         filename = paste0(experiment_name(), "_", Sys.Date(), "_QCreport.html"),
         content = function(file) {
             tempReport <- file.path(tempdir(), "template.Rmd")
             file.copy("template.Rmd", tempReport, overwrite = TRUE)
 
-            rmarkdown::render(tempReport, 
+            rmarkdown::render(tempReport,
                               output_file = file,
                               params = list(raw_data_filename = raw_data_filename(),
                                             plate_layout_filename = plate_layout_filename(),
@@ -131,6 +163,16 @@ shinyServer(function(input, output, session){
         }
     )
     
+    # Downloadable csv of standards ----
+    output$downloadStds <- downloadHandler(
+        filename = function() {
+            paste0(experiment_name(), "_", Sys.Date(), "_stdcurve.csv", sep = "")
+        },
+        content = function(file) {
+            write.csv(readSeroData(raw_data())[[5]], file, row.names = FALSE)
+        }
+    )
+    
     # Downloadable csv of MFI/RAU results file ----
     output$downloadData <- downloadHandler(
         filename = function() {
@@ -141,5 +183,31 @@ shinyServer(function(input, output, session){
         }
     )
     
-
+    # Downloadable csv of classification results file ----
+    output$downloadSero <- downloadHandler(
+        filename = function() {
+            paste0(experiment_name(), "_", Sys.Date(), "_classification.csv", sep = "")
+        },
+        
+        content = function(file) {
+                write.csv(classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months),
+                          file, row.names = FALSE)
+        }
+    )
+    # output$downloadSero <- downloadHandler(
+    #         filename = function() {
+    #             paste0(experiment_name(), "_", Sys.Date(), "_classification.csv", sep = "")
+    #         },
+    #         
+    #         content = function(file) {
+    #             if(algorithm == "PNG algorithm")
+    #             write.csv(classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months),
+    #                       file, row.names = FALSE)
+    #             else
+    #             ####------------ CHANGE THIS LATER  
+    #             write.csv(classifyExposure(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months),
+    #                       file, row.names = FALSE)
+    #         }
+    # )
+    
 })

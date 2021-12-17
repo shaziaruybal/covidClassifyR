@@ -112,9 +112,10 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                 tabPanel("Download",
                                          br(),
                                          p("Click the buttons to download."),
-                                         downloadButton("report", "Download quality control report", disabled = "disabled"),
+                                         downloadButton("downloadData", "Download MFI/RAU data", disabled = "disabled"),
                                          downloadButton("downloadStds", "Download standard curve data", disabled = "disabled"),
-                                         downloadButton("downloadData", "Download MFI/RAU data", disabled = "disabled"))
+                                         downloadButton("report", "Download quality control report", disabled = "disabled")
+                                         )
                             ))),
                    
                    # ----------------------------------

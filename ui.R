@@ -131,7 +131,8 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                              label = "Classification algorithm (choose one):",
                                              choices = c("PNG algorithm", "Melbourne algorithm")),
                                 p("NOTE: the Melbourne algorithm is coming soon. "),
-                                p("Below you can also upload data that has already been processed using the app in order to apply the classification algorithm. Note that the data must be supplied in the appropriate format for the classification to work.")
+                                p("Below you can also upload data that has already been processed using the app in order to apply the classification algorithm. Note that the data must be supplied in the appropriate format for the classification to work. (COMING SOON)"),
+                                fileInput("RAUdataUpload", "Upload your MFI/RAU data:", multiple = FALSE, accept = ".csv")
                                 ),
                             mainPanel(tabsetPanel(
                                 tabPanel("Classification results", 

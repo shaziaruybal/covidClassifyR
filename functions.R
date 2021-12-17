@@ -206,7 +206,8 @@ plotBlanks <- function(raw_data, experiment_name){
     labs(x = "protein", 
          y = "MFI",
          title = experiment_name) +
-    theme_linedraw()
+    theme_linedraw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 }
 
 ##############################################################################
@@ -490,6 +491,73 @@ classifyExposure <- function(raw_data, plate_layout, classifier1, classifier2, c
   data_sero <- data %>% dplyr::select(SampleID) %>% left_join(predict, by = "SampleID")
 
   return(data_sero)
+}
+
+##############################################################################
+# plotBoxplotMFI function
+# --------------------------
+#
+# This function plots the MFI values for each protein 
+#  
+#
+# PARAMETERS: 
+#   - raw_data_file: string with the raw data .xlsx filename 
+#   - experiment_name: string with the experiment name (reactive)
+#
+# OUTPUT:
+#   - Box plots with MFI values for each protein
+##############################################################################
+
+plotBoxplotMFI <- function(raw_data, plate_layout){
+  
+  data <- runModel(raw_data, plate_layout)[[2]]
+  
+  data %>% 
+    select(SampleID, ends_with("_MFI")) %>%
+    pivot_longer(-SampleID, names_to = "protein", values_to = "dilution") %>%
+    ggplot(aes(x= protein, y = dilution, fill = protein)) +
+    geom_boxplot() +
+    scale_y_log10(breaks = c(0, 10, 100, 1000, 10000)) + 
+    scale_fill_brewer(palette = "Paired", type = "qual") +
+    labs(x = "protein",
+         y = "MFI") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+}
+
+##############################################################################
+# plotBoxplotRAU function
+# --------------------------
+#
+# This function plots the RAU values for each protein 
+#  
+#
+# PARAMETERS: 
+#   - raw_data_file: string with the raw data .xlsx filename 
+#   - experiment_name: string with the experiment name (reactive)
+#
+# OUTPUT:
+#   - Box plots with MFI values for each protein
+##############################################################################
+
+plotBoxplotRAU <- function(raw_data, plate_layout){
+  
+  data <- runModel(raw_data, plate_layout)[[2]]
+  
+  data %>% 
+    select(SampleID, ends_with("_Dilution")) %>%
+    pivot_longer(-SampleID, names_to = "protein", values_to = "dilution") %>%
+    ggplot(aes(x= protein, y = dilution, fill = protein)) +
+    geom_boxplot() +
+    scale_y_log10(breaks = c(1e-5, 1e-4, 1e-3, 1e-2, 0.03),
+                  labels = c("0.00001", "0.0001", "0.001", "0.01", "0.03")) +
+    scale_fill_brewer(palette = "Paired", type = "qual") +
+    labs(x = "protein",
+         y = "Antibody dilution") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
 }
 
 ##############################################################################

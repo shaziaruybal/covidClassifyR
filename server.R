@@ -25,7 +25,6 @@ load("algorithms/mel_classifiers.Rdata")
 
 shinyServer(function(input, output, session){
     
-    
     ### make inputs reactive
     experiment_name <- reactive({
         req(input$experiment_name)
@@ -112,6 +111,13 @@ shinyServer(function(input, output, session){
         runModel(raw_data(), plate_layout())[[3]]
     })
     
+    mfi_plot <- reactive({
+        plotBoxplotMFI(raw_data(), plate_layout())
+    })
+    
+    rau_plot <- reactive({
+        plotBoxplotRAU(raw_data(), plate_layout())
+    })
     
     #### Output objects
     output$stdcurve <- renderPlot(stdcurve_plot())
@@ -122,6 +128,10 @@ shinyServer(function(input, output, session){
     output$results <- DT::renderDataTable({
         runModel(raw_data(), plate_layout())[[2]]
     })
+    
+    #### Interactive output visualizations
+    output$boxplotMFI <- renderPlotly(mfi_plot())
+    output$boxplotRAU <- renderPlotly(rau_plot())
     
     #### Classification algorithm
     

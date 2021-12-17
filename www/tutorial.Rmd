@@ -1,0 +1,12 @@
+---
+output: 
+  html_document:
+    theme: 
+      bootswatch: sandstone
+---
+
+#### **Step-by-step tutorial for how to use covidClassifyR**
+
+------------------------------------------------------------------------
+
+Coming soon, a step-by-step tutorial on how to get started with covidClassifyR

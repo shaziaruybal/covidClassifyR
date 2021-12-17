@@ -209,5 +209,16 @@ shinyServer(function(input, output, session){
     #                       file, row.names = FALSE)
     #         }
     # )
+
+    output$home <- renderUI({
+        tags$iframe(src="home.html",width="100%",frameBorder="0",height="500px")
+    })
     
+    output$tutorial <- renderUI({
+        tags$iframe(src="tutorial.html",width="100%",frameBorder="0",height="500px")
+    })
+        
+    output$pngAlgorithm <- renderUI({
+        tags$iframe(src="PNG_classification_algorithm.html",width="100%",frameBorder="0",height="500px")
+    })
 })

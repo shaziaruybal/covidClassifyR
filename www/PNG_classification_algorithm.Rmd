@@ -1,0 +1,231 @@
+---
+title: "Classification algorithm for PNG SARS-CoV-2 Luminex assay"
+author: "Shazia Ruybal-Pesántez"
+date: "`r Sys.Date()`"
+output: 
+  bookdown::html_document2:
+    theme: cosmo
+    df_print: paged
+    toc: yes
+    toc_depth: "4"
+    number_sections: false
+    toc_float: yes
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, 
+                      warnings = FALSE, 
+                      fig.path = here::here("figures/"),
+                      dev = "png",
+                      dpi = 300)
+library(bookdown)
+library(here)
+library(readxl)
+library(tidyverse)
+library(kableExtra)
+library(janitor)
+library(RColorBrewer)
+library(patchwork)
+library(plotly)
+library(DT)
+library(dplyr)
+library(randomForest)
+library(pROC)
+```
+
+------------------------------------------------------------------------
+
+## Background
+
+------------------------------------------------------------------------
+
+This report outlines the optimization of the Luminex multiplex serological assay classification algorithm for detection of IgG antibodies against SARS-CoV-2 developed in the Mueller lab at Walter and Eliza Hall Institute of Medical Research.
+
+### Assay details
+
+#### Validation/optimization
+
+The sample sets processed for this optimization are detailed below:
+
+-   `dw`: Samples provided by Prof Deborah Williamson from the Microbiological Diagnostic Unit Public Health Laboratory at the Doherty Institute (SARS-CoV-2 positive, negative pre-pandemic controls and possibly cross-reactive samples e.g. seasonal CoVs)
+-   `cp`: Samples provided by Prof Mueller from WEHI COVID-PROFILE study (SARS-CoV-2 positive samples)
+-   `neg`: Negative controls from the Australian Red Cross and Volunteer Blood Donor Registry at WEHI
+-   `sk`: Samples provided by Prof Stephen Kent from University of Melbourne (SARS-CoV-2 positive samples)
+-   `setrep`: Samples provided from the SET-REP-ID study at University of Melbourne/PDI (SARS-CoV-2 positive samples)
+
+```{r load and curate data}
+# AB data
+
+AB_data <- readRDS(here::here("data", "data_2021-07-19.rds"))
+  
+# antigen info
+protein_guide <- read_xlsx(here::here("data", "antigen_panel.xlsx"))
+```
+
+The 11-antigen panel includes the following proteins: `r kable(protein_guide) %>% kable_styling() %>% row_spec(1:5, background = "#decbe4") %>% row_spec(6, background = "#ccebc5") %>% row_spec(7, background = "#b3cde3") %>% row_spec(8:11, background = "#fbb4ae")`
+
+The dataset used for the classification includes the following positive and negative samples: `r kable((AB_data %>% tabyl(sero_status) %>% adorn_totals("row") %>% adorn_pct_formatting(1))) %>% kable_styling()`.
+
+The SARS-CoV-2 PCR positive samples were collected across a range of days post symptom onset (median = `r AB_data %>% filter(sero_status == "positive") %>% summarise(median(days_post_symptom_onset, na.rm = T)) %>% as.integer()` days, range = `r AB_data %>% filter(sero_status == "positive") %>% summarise(min(days_post_symptom_onset, na.rm = T)) %>% as.integer()` - `r AB_data %>% filter(sero_status == "positive") %>% summarise(max(days_post_symptom_onset, na.rm = T)) %>% as.integer()` days).
+
+```{r protein colors}
+protein_list <- c("IVB_Vic_HA", "Tet_Tox", "CS1H_NA", "229ES1H_S", "CS2H_NA", "CNPH_AC", "CRBD_WT", "HKU1S1H_AW", "CSpikeH_AW", "OC43Spike_S", "NL63NPEc_P")
+
+COVID_cols <- brewer.pal(n=5,"Set2") 
+nonCOVID_cols <- brewer.pal(n=6,"Paired")
+
+protein_names_df <- data.frame(protein_long = c("IVB_Vic_HA_MFI", 
+                                                "Tet_Tox_MFI", 
+                                                "CS1H_NA_Dilution",
+                                                "229ES1H_S_MFI",
+                                                "CS2H_NA_Dilution",
+                                                "CNPH_AC_Dilution",
+                                                "CRBD_WT_Dilution",
+                                                "HKU1S1H_AW_MFI",
+                                                "CSpikeH_AW_Dilution",
+                                                "OC43Spike_S_MFI",
+                                                "NL63NPEc_P_MFI"),
+                               protein = protein_list)
+
+protein_names_df <- protein_names_df %>% column_to_rownames("protein_long")
+
+protein_cols <- list(protein = c("IVA_Swiss_H3N2" = "#33A02C",
+                                 "IVB_Vic_HA" = "#E31A1C",
+                                 "IVB_Phuk_HA" = "#FB9A99",
+                                 "Tet_Tox" = "#B15928",
+                                 "CS1H_NA" = "#FFD92F", 
+                                 "229ES1H_S" = "#FFFF99", 
+                                 "CS2H_NA" =  "#E5C494", 
+                                 "CNPH_AC" = "#8DA0CB", 
+                                 "CRBD_WT" = "#E78AC3", 
+                                 "HKU1S1H_AW" = "#A6CEE3", 
+                                 "CSpikeH_AW" = "#B3B3B3", 
+                                 "IVA_Calif_AW" = "#B2DF8A", 
+                                 "OC43Spike_S" = "#CAB2D6", 
+                                 "NL63NPEc_P" = "#FDBF6F")) 
+
+SARSCOV2_proteins_list <- c("CNPH_AC", 
+                            "CRBD_WT",
+                            "CS1H_NA",
+                            "CS2H_NA",
+                            "CSpikeH_AW")
+```
+
+#### Standardized analysis
+
+For each plate, the standard curve for each antigen is used to convert median fluorescent intensity (MFI, raw fluorescent reads from the Luminex instrument) to relative antibody units (antibody dilution) for the SARS-CoV-2 proteins. For all analyses the IgG antibody levels are analyzed based on antibody dilution for SARS-CoV-2 proteins and raw MFI for non SARS-CoV-2 proteins.
+
+### Serological exposure classification
+
+Our multi-antigen panel was developed as a serological tool that can detect individuals with past exposure to SARS-CoV-2 without the need for knowledge of previous exposure *a priori*. By simultaneously measuring antibodies to multiple SARS-CoV-2 antigens and other viral antigens, we can leverage these antibody measurements to train a random forest machine learning algorithm based on the serological signatures of multiple antigens. As described in [Validation/optimization], we trained our classification algorithm using a dataset with samples from individuals with a confirmed SARS-CoV-2 PCR positive result (positive samples) from several independent studies, as well as negative samples (pre-pandemic negative controls, Australian Red Cross, VBDR samples).
+
+Before training the random forest, we divided the data set into three separate categories. The first category contained all samples in the data set, the second category contained the negative controls and positive samples that were more than two weeks but up to three months post symptom onset and the final category contained the negative controls and positive samples whose symptom onset was between three and six months. This allowed us to train three separate random forests and determine the sensitivity and specificity of each (Figure \@ref(fig:random-forest)). We note that a random sample containing two thirds of the data is used to train each random forest, with the remainder of the data set being used for validation.
+
+```{r random-forest, fig.cap = "The sensitivity and specificity of the random forest classification algorithms."}
+AB_data <- AB_data %>% dplyr::rename(P229ES1H_S_MFI = `229ES1H_S_MFI`)
+
+# Random forest classification looking at single antigen! 
+RF_data_3months <- AB_data %>% filter(sero_status == "positive" & days_post_symptom_onset > 14 & days_post_symptom_onset < 90 | sero_status == "negative") 
+RF_data_Not3months <- AB_data %>% filter(!(sero_status == "positive" & days_post_symptom_onset > 14 & days_post_symptom_onset < 90 | sero_status == "negative"))
+
+RF_data_all <- AB_data
+
+RF_data_Greater3months <- AB_data %>% filter(sero_status == "positive" & days_post_symptom_onset > 14 & days_post_symptom_onset > 90 | sero_status == "negative") 
+RF_data_NotGreater3months <- AB_data %>% filter(!(sero_status == "positive" & days_post_symptom_onset > 14 & days_post_symptom_onset > 90 | sero_status == "negative"))
+
+# Calculate the size of the data sets:
+data_set_size <- floor(2*nrow(RF_data_all)/3)
+data_set_size_3months <- floor(2*nrow(RF_data_3months)/3.0)
+data_set_size_G3months <- floor(2*nrow(RF_data_Greater3months)/3.0)
+
+# Generate a random sample of indices to make the training and validation data. 
+index_all <- sample(1:nrow(RF_data_all), size = data_set_size)
+index_3 <- sample(1:nrow(RF_data_3months),size = data_set_size_3months)
+index_g3 <- sample(1:nrow(RF_data_Greater3months),size = data_set_size_G3months)
+
+#  Training data
+training_data <- RF_data_all[index_all,]
+training_data_3months <- RF_data_3months[index_3,]
+training_data_G3months <- RF_data_Greater3months[index_g3,]
+
+# Validation data
+validation_data <- RF_data_all[-index_all,]
+validation_data_3months <- RF_data_3months[-index_3,]
+validation_data_G3months <- RF_data_Greater3months[-index_g3,]
+
+# Run random forest classification on data. 
+ntree_param = 10000 # What value would we like?  Should probably run some tests. 
+mtry_param = 9 # How many branches at each node would we like?  
+
+rf_classifier_all = randomForest(as.factor(sero_status) ~ CSpikeH_AW_Dilution+CRBD_WT_Dilution+CNPH_AC_Dilution+CS2H_NA_Dilution+CS1H_NA_Dilution + OC43Spike_S_MFI + NL63NPEc_P_MFI  + HKU1S1H_AW_MFI + P229ES1H_S_MFI, data=training_data, mtry = mtry_param,ntree = ntree_param, importance=TRUE)
+
+rf_classifier_3months = randomForest(as.factor(sero_status) ~ CSpikeH_AW_Dilution+CRBD_WT_Dilution+CNPH_AC_Dilution+CS2H_NA_Dilution+CS1H_NA_Dilution + OC43Spike_S_MFI + NL63NPEc_P_MFI  + HKU1S1H_AW_MFI + P229ES1H_S_MFI, data=training_data_3months, mtry = mtry_param,ntree = ntree_param, importance=TRUE)
+
+rf_classifier_G3months = randomForest(as.factor(sero_status) ~ CSpikeH_AW_Dilution+CRBD_WT_Dilution+CNPH_AC_Dilution+CS2H_NA_Dilution+CS1H_NA_Dilution + OC43Spike_S_MFI + NL63NPEc_P_MFI  + HKU1S1H_AW_MFI + P229ES1H_S_MFI, data=training_data_G3months, mtry = mtry_param,ntree = ntree_param, importance=TRUE)
+
+# Predict the validation data. 
+predict_validation_all <- mutate(validation_data, Prediction = predict(rf_classifier_all,validation_data))
+
+# Sensitivity and specificity.
+true_neg<- sum(predict_validation_all$sero_status =="negative" & predict_validation_all$Prediction =="negative",na.rm = TRUE)
+true_pos<- sum(predict_validation_all$sero_status =="positive" & predict_validation_all$Prediction =="positive",na.rm = TRUE)
+false_neg<- sum(predict_validation_all$sero_status =="positive" & predict_validation_all$Prediction =="negative",na.rm = TRUE)
+false_pos<- sum(predict_validation_all$sero_status =="negative" & predict_validation_all$Prediction =="positive",na.rm = TRUE)
+
+sensitivity_all <- true_pos/(false_neg + true_pos)*100
+specificity_all <- true_neg/(false_pos+ true_neg)*100
+
+# Predict the validation data. 
+predict_validation_3 <- mutate(validation_data_3months, Prediction = predict(rf_classifier_3months,validation_data_3months))
+
+# mean(predict_validation_3$Prediction==predict_validation_3$sero_status)
+sero_vs_predict_3 <-predict_validation_3 %>% group_by(sero_status,Prediction) %>% tally()
+
+# Sensitivity and specificity.
+true_neg<- sum(predict_validation_3$sero_status =="negative" & predict_validation_3$Prediction =="negative",na.rm = TRUE)
+true_pos<- sum(predict_validation_3$sero_status =="positive" & predict_validation_3$Prediction =="positive",na.rm = TRUE)
+false_neg<- sum(predict_validation_3$sero_status =="positive" & predict_validation_3$Prediction =="negative",na.rm = TRUE)
+false_pos<- sum(predict_validation_3$sero_status =="negative" & predict_validation_3$Prediction =="positive",na.rm = TRUE)
+
+sensitivity_3 <- true_pos/(false_neg + true_pos)*100
+specificity_3 <- true_neg/(false_pos+ true_neg)*100
+
+# Predict the validation data. 
+predict_validation_G3 <- mutate(validation_data_G3months, Prediction = predict(rf_classifier_G3months,validation_data_G3months))
+# mean(predict_validation_G3$Prediction==predict_validation_G3$sero_status)
+sero_vs_predict_G3 <-predict_validation_G3 %>% group_by(sero_status,Prediction) %>% tally()
+
+# Sensitivity and specificity.
+true_neg<- sum(predict_validation_G3$sero_status =="negative" & predict_validation_G3$Prediction =="negative",na.rm = TRUE)
+true_pos<- sum(predict_validation_G3$sero_status =="positive" & predict_validation_G3$Prediction =="positive",na.rm = TRUE)
+false_neg<- sum(predict_validation_G3$sero_status =="positive" & predict_validation_G3$Prediction =="negative",na.rm = TRUE)
+false_pos<- sum(predict_validation_G3$sero_status =="negative" & predict_validation_G3$Prediction =="positive",na.rm = TRUE)
+
+sensitivity_G3<- true_pos/(false_neg + true_pos)*100
+specificity_G3 <- true_neg/(false_pos+ true_neg)*100
+
+
+
+rf.roc<-roc(training_data$sero_status,rf_classifier_all$votes[,1],levels = c("negative","positive"),direction = ">")
+
+rf.roc2<-roc(training_data_3months$sero_status,rf_classifier_3months$votes[,1],levels = c("negative","positive"),direction = ">")
+
+rf.roc3<-roc(training_data_G3months$sero_status,rf_classifier_G3months$votes[,1],levels = c("negative","positive"),direction = ">")
+  
+ggroc(list("All Samples" = rf.roc,"Within 3 months" = rf.roc2,"Greater than 3 months" =rf.roc3)) + 
+  scale_color_brewer(type = "qual",
+                     palette = "Set1") +
+  labs(x = "True negative rate (specificity)",
+       y = "True positive rate (sensitivity)") +
+  theme_bw() +  
+  theme(legend.title = element_blank()) 
+```
+
+Figure \@ref(fig:random-forest) shows that we find a sensitivity and specificity of `r round(sensitivity_all,2)`% and `r round(specificity_all,2)`% on the validation data for the random forest trained with all samples. We find a sensitivity and specificity of `r round(sensitivity_3,2)`% and `r round(specificity_3,2)`% on the validation data for the random forest trained with positive samples that were more than 2 weeks and within three months of symptom onset. Finally, we observe a sensitivity and specificity of `r round(sensitivity_G3,2)`% and `r round(specificity_G3,2)`% on the validation data for the random forest trained with positive samples that were greater than three months and less than six months from symptom onset.
+
+```{r save random forest models}
+saveRDS(rf_classifier_3months, here::here("rf-classifier", "rf_classifier_3months.rds"))
+saveRDS(rf_classifier_all, here::here("rf-classifier", "rf_classifier_all.rds"))
+saveRDS(rf_classifier_G3months, here::here("rf-classifier", "rf_classifier_G3months.rds"))
+```

@@ -73,6 +73,9 @@ shinyServer(function(input, output, session){
     ### print the algorithm choice for cross-checking
     output$algorithm_choice <- renderText(paste0("Algorithm choice: ", algorithm()))
     
+    ### print the algorithm choice for cross-checking when downloading
+    output$algorithm_choice_remind <- renderText(paste0("Based on your algorithm choice (", algorithm(), ") download your data below:"))
+    
     ### read imported file and print raw data for checking
     output$alldata <- renderTable({
         readSeroData(raw_data())[[1]]
@@ -134,17 +137,16 @@ shinyServer(function(input, output, session){
     output$boxplotRAU <- renderPlotly(rau_plot())
     
     #### Classification algorithm
-    
     output$classification_results <- DT::renderDataTable({
         if(algorithm() == "PNG algorithm"){
-        
+
             classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months)
 
         }
-        
+
         else{
             classifyExposureMel(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months)
-        
+
         }
     })
     
@@ -192,29 +194,40 @@ shinyServer(function(input, output, session){
     )
     
     # Downloadable csv of classification results file ----
-    output$downloadSero <- downloadHandler(
+    output$downloadSeroPNG <- downloadHandler(
         filename = function() {
-            paste0(experiment_name(), "_", Sys.Date(), "_classification.csv", sep = "")
+            paste0(experiment_name(), "_", Sys.Date(), "_classification_", algorithm(), ".csv", sep = "")
         },
-        
+
         content = function(file) {
-                write.csv(classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months),
+                write.csv(classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months), 
                           file, row.names = FALSE)
         }
     )
+    
+    output$downloadSeroMel <- downloadHandler(
+        filename = function() {
+            paste0(experiment_name(), "_", Sys.Date(), "_classification_", algorithm(), ".csv", sep = "")
+        },
+        
+        content = function(file) {
+            write.csv(classifyExposureMel(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months), 
+                      file, row.names = FALSE)
+        }
+    )
+    
     # output$downloadSero <- downloadHandler(
     #         filename = function() {
     #             paste0(experiment_name(), "_", Sys.Date(), "_classification.csv", sep = "")
     #         },
-    #         
+    # 
     #         content = function(file) {
-    #             if(algorithm == "PNG algorithm")
+    #             if(algorithm == "PNG algorithm") {
     #             write.csv(classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months),
-    #                       file, row.names = FALSE)
-    #             else
-    #             ####------------ CHANGE THIS LATER  
-    #             write.csv(classifyExposure(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months),
-    #                       file, row.names = FALSE)
+    #                       file, row.names = FALSE)}
+    #             else if (algorithm == "Melbourne algorithm"){
+    #             write.csv(classifyExposureMel(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months),
+    #                       file, row.names = FALSE)}
     #         }
     # )
 

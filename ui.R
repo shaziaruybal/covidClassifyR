@@ -130,7 +130,6 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                 radioButtons(inputId = "algorithm",
                                              label = "Classification algorithm (choose one):",
                                              choices = c("PNG algorithm", "Melbourne algorithm")),
-                                p("NOTE: the Melbourne algorithm is coming soon. "),
                                 p("Below you can also upload data that has already been processed using the app in order to apply the classification algorithm. Note that the data must be supplied in the appropriate format for the classification to work. (COMING SOON)"),
                                 fileInput("RAUdataUpload", "Upload your MFI/RAU data:", multiple = FALSE, accept = ".csv")
                                 ),
@@ -142,7 +141,11 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                          DTOutput("classification_results")),
                                 tabPanel("Download data",
                                          br(),
-                                         downloadButton("downloadSero", "Download classification data", disabled = "disabled"))
+                                         textOutput("algorithm_choice_remind"), 
+                                         br(),
+                                         downloadButton("downloadSeroPNG", "Download classification data (PNG algorithm)", disabled = "disabled"),
+                                         br(),
+                                         downloadButton("downloadSeroMel", "Download classification data (Melbourne algorithm)", disabled = "disabled"))
                             )))),
                    
                    # ----------------------------------

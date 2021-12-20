@@ -3,11 +3,8 @@
 ######################################################
 
 # TODO:
-#   - proportion seropos/neg
 #   - summary seropos/neg?
 #   - user uploaded processed data for classification?
-#   - Melbourne algorithm integrate
-
 
 library(shiny)
 library(rmarkdown)
@@ -160,6 +157,7 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                 tabPanel("Exposure status",
                                          p("The exposure status results for each of the classifiers can be found below. The algorithm was trained on three dataset partitions: 1) all samples from >2 weeks from symptom onset, 2) samples within >2 weeks from sympton onset and up to 3 months post-symptom onset, and 3) samples from >3 to 6 months post-symptom onset (for more details see 'Algorithm details')."),
                                          p("Disclaimer: the results obtained from this classification are for research purposes only and should not be considered a diagnosis"),
+                                         plotlyOutput("propSero")
                                 ))),
                    
                    # ----------------------------------

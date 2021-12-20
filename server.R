@@ -122,6 +122,10 @@ shinyServer(function(input, output, session){
         plotBoxplotRAU(raw_data(), plate_layout())
     })
     
+    sero_plot <- reactive({
+        plotProportionSero(raw_data(), plate_layout(), algorithm())
+    })
+    
     #### Output objects
     output$stdcurve <- renderPlot(stdcurve_plot())
     output$plateqc <- renderPlot(plateqc_plot())
@@ -135,6 +139,7 @@ shinyServer(function(input, output, session){
     #### Interactive output visualizations
     output$boxplotMFI <- renderPlotly(mfi_plot())
     output$boxplotRAU <- renderPlotly(rau_plot())
+    output$propSero <- renderPlotly(sero_plot())
     
     #### Classification algorithm
     output$classification_results <- DT::renderDataTable({

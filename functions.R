@@ -613,6 +613,71 @@ plotBoxplotRAU <- function(raw_data, plate_layout){
   
 }
 
+
+
+##############################################################################
+# plotProportionSero function
+# --------------------------
+#
+# This function plots the exposure status results for all samples
+#  
+#
+# PARAMETERS: 
+#   - raw_data_file: string with the raw data .xlsx filename 
+#   - experiment_name: string with the experiment name (reactive)
+#
+# OUTPUT:
+#   - Box plots with MFI values for each protein
+##############################################################################
+plotProportionSero <- function(raw_data, plate_layout, algorithm){
+  
+  if(algorithm == "PNG algorithm"){
+    sero <- classifyExposure(raw_data, plate_layout, png_rf_all, png_rf_3months, png_rf_G3months)
+    
+    sero %>% 
+      rename("Classifier: All" = `Prediction all`,
+             "Classifer: 2wks-<3 months" = `Prediction less than 3 months`,
+             "Classifier: >3-6 months" = `Prediction greater than 3 months`) %>% 
+      pivot_longer(-SampleID, names_to = "classifier", values_to = "result") %>%
+      group_by(classifier,result) %>% 
+      tally() %>% 
+      ggplot(aes(x= classifier, y = n, fill = result)) +
+      geom_bar(stat = "identity") +
+      scale_fill_manual(values = c("positive" = "indianred3",
+                                   "negative" = "lightblue3")) +
+      labs(x = "",
+           y = "Number of samples",
+           fill = "Exposure status",
+           title = paste0("Results based on: ", algorithm)) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    
+  }
+  else 
+  {
+  sero <- classifyExposureMel(raw_data, plate_layout, mel_rf_all, mel_rf_3months, mel_rf_G3months)
+  
+    
+    sero %>% 
+       rename("Classifier: All" = `Prediction all`,
+              "Classifer: 2wks-<3 months" = `Prediction less than 3 months`,
+              "Classifier: >3-6 months" = `Prediction greater than 3 months`) %>% 
+       pivot_longer(-SampleID, names_to = "classifier", values_to = "result") %>%
+       group_by(classifier,result) %>% 
+       tally() %>% 
+       ggplot(aes(x= classifier, y = n, fill = result)) +
+       geom_bar(stat = "identity") +
+       scale_fill_manual(values = c("positive" = "indianred3",
+                                    "negative" = "lightblue3")) +
+       labs(x = "",
+            y = "Number of samples",
+            fill = "Exposure status",
+            title = paste0("Results based on: ", algorithm)) +
+       theme_minimal() +
+       theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  } 
+}
+
 ##############################################################################
 # summaryClassification function
 # --------------------------

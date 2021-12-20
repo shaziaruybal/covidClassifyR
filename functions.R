@@ -435,7 +435,7 @@ plotModel <- function(raw_data, plate_layout){
 
 
 ##############################################################################
-# classifyExposure function
+# classifyExposure function (PNG)
 # --------------------------
 #
 # This function classifies unknown samples as recently exposed or not 
@@ -479,17 +479,70 @@ classifyExposure <- function(raw_data, plate_layout, classifier1, classifier2, c
 
   data %>% dplyr::select(SampleID, CS1H_NA_Dilution, P229ES1H_S_MFI, CS2H_NA_Dilution, CNPH_AC_Dilution,CRBD_WT_Dilution, HKU1S1H_AW_MFI, CSpikeH_AW_Dilution,OC43Spike_S_MFI,NL63NPEc_P_MFI)
   
-  # cat("------- Antigen names have been renamed. Starting classification....\n")
-  
   predict <- data %>% select(SampleID)
 
   predict <- mutate(predict,`Prediction all` = predict(rf1, data))
   predict <- mutate(predict,`Prediction less than 3 months` = predict(rf2, data))
   predict <- mutate(predict,`Prediction greater than 3 months`= predict(rf3, data))
 
-  # cat("------- Prediction has completed....\n")
   data_sero <- data %>% dplyr::select(SampleID) %>% left_join(predict, by = "SampleID")
 
+  return(data_sero)
+}
+
+##############################################################################
+# classifyExposureMel function (Melbourne)
+# --------------------------
+#
+# This function classifies unknown samples as recently exposed or not 
+# (Note: runModel() needs to be run first to convert to RAU)
+#  
+#
+# PARAMETERS: 
+#   - raw_data_file: string with the raw data .xlsx filename 
+#   - algorithm: user-selected algorithm choice
+#
+# OUTPUT:
+#   - Data frame with exposure status for every sample
+#   - Summary table with positive/negative results for each classifier
+##############################################################################
+
+classifyExposureMel <- function(raw_data, plate_layout, classifier1, classifier2, classifier3){
+  data <- runModel(raw_data, plate_layout)[[2]]
+  
+  rf1 <- classifier1
+  rf2 <- classifier2
+  rf3 <- classifier3
+  
+  data <- data %>% rename_at(vars(contains("CSpike", ignore.case = T) & ends_with("_Dilution", ignore.case = T)),
+                                  ~"CSpikeH_AW_IgG_Dilution") %>%
+    rename_at(vars(contains("CRBD", ignore.case = T) & ends_with("_Dilution", ignore.case = T)),
+              ~"CRBDH_WT_IgG_Dilution") %>%
+    rename_at(vars(contains("CNPH", ignore.case = T) & ends_with("_Dilution", ignore.case = T)),
+              ~"CNPH_AC_IgG_Dilution") %>%
+    rename_at(vars(contains("CS2", ignore.case = T) & ends_with("_Dilution", ignore.case = T)),
+              ~"CS2H_NA_IgG_Dilution") %>%
+    rename_at(vars(contains("CS1", ignore.case = T) & ends_with("_Dilution", ignore.case = T)),
+              ~"CS1H_NA_IgG_Dilution") %>%
+    rename_at(vars(contains("OC43", ignore.case = T) & ends_with("_MFI", ignore.case = T)),
+              ~"OC43Spike_S_IgG_MFI") %>%
+    rename_at(vars(contains("NL63", ignore.case = T) & ends_with("_MFI", ignore.case = T)),
+              ~"NL63NPEc_P_IgG_MFI") %>%
+    rename_at(vars(contains("HKU", ignore.case = T) & ends_with("_MFI", ignore.case = T)),
+              ~"HKUS1H_AW_IgG_MFI") %>%
+    rename_at(vars(contains("229", ignore.case = T) & ends_with("_MFI", ignore.case = T)),
+              ~"P229ES1H_S_IgG_MFI")
+  
+  data %>% dplyr::select(SampleID, CS1H_NA_IgG_Dilution, P229ES1H_S_IgG_MFI, CS2H_NA_IgG_Dilution, CNPH_AC_IgG_Dilution, CRBDH_WT_IgG_Dilution, HKUS1H_AW_IgG_MFI, CSpikeH_AW_IgG_Dilution,OC43Spike_S_IgG_MFI,NL63NPEc_P_IgG_MFI)
+  
+  predict <- data %>% select(SampleID)
+  
+  predict <- mutate(predict,`Prediction all` = predict(rf1, data))
+  predict <- mutate(predict,`Prediction less than 3 months` = predict(rf2, data))
+  predict <- mutate(predict,`Prediction greater than 3 months`= predict(rf3, data))
+  
+  data_sero <- data %>% dplyr::select(SampleID) %>% left_join(predict, by = "SampleID")
+  
   return(data_sero)
 }
 

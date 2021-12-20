@@ -143,9 +143,7 @@ shinyServer(function(input, output, session){
         }
         
         else{
-        ##------------ CHANGE THIS LATER
-            classifyExposure(raw_data(), plate_layout(), png_rf_all, png_rf_3months, png_rf_G3months)
-            # classifyExposure(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months)
+            classifyExposureMel(raw_data(), plate_layout(), mel_rf_all, mel_rf_3months, mel_rf_G3months)
         
         }
     })

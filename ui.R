@@ -116,8 +116,9 @@ shinyUI(navbarPage(title = "covidClassifyR",
                             ))),
                    
                    # ----------------------------------
-                   # tab panel 5 - Classification
-                   tabPanel("Classify exposure", 
+                   # drop-down menu - Classification
+                   navbarMenu("Classification",
+                        tabPanel("Classify exposure", 
                             h3("Classify exposure"),
                             p("Our multi-antigen panel was developed for research purposes as a serological tool that can detect individuals with past exposure to SARS-CoV-2 without the need for knowledge of previous exposure a priori. By simultaneously measuring antibodies to multiple SARS-CoV-2 antigens and other viral antigens, we have leveraged these antibody measurements to train a random forest machine learning algorithm based on the combined serological signatures of multiple antigens. We trained our classification algorithm using a dataset with samples from individuals with a confirmed SARS-CoV-2 PCR positive result (positive samples) from several independent studies, as well as negative samples from various independent sources (pre-pandemic negative controls, Australian Red Cross and Victorian Blood Donor Registry samples). Given the variability in time since symptom onset and overall exposure to SARS-CoV-2 in unknown samples from epidemiological studies, we have trained three separate classifier algorithms based on different stratifications of the data: 1) negative controls and all positive samples in the data set, 2) negative controls and positive samples that were more than two weeks but up to three months post symptom onset, and 3) negative controls and positive samples collected between three and six months post symptom onset. If knowledge of time since symptom onset is known, this can be leveraged by selecting the most appropriate classifier, otherwise we recommend making an educated decision based on the results from all three classifiers. For more information about the algorithms, click on the tab 'Algorithm details'."),
                             br(),
@@ -144,10 +145,19 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                          br(),
                                          downloadButton("downloadSeroMel", "Download classification data (Melbourne algorithm)", disabled = "disabled"))
                             )))),
-                   
+                    # ----------------------------------
+                    # drop-down menu item 2 - tab panel - Classification details
+                    tabPanel("Algorithm details",
+                                     tabsetPanel(
+                                         tabPanel("PNG algorithm details",
+                                                  fluidPage(
+                                                      br(),
+                                                      uiOutput("pngAlgorithm"))), 
+                                         tabPanel("Melbourne algorithm details", "COMING SOON....")
+                                     ))
+                   ),
                    # ----------------------------------
                    # tab panel 6 - Data visualizations
-                   
                    tabPanel("Data visualization",
                             h3("Data visualization"),
                             p("Below you can take a quick look at your data through the interactive plots."),
@@ -158,18 +168,7 @@ shinyUI(navbarPage(title = "covidClassifyR",
                                          p("The exposure status results for each of the classifiers can be found below. The algorithm was trained on three dataset partitions: 1) all samples from >2 weeks from symptom onset, 2) samples within >2 weeks from sympton onset and up to 3 months post-symptom onset, and 3) samples from >3 to 6 months post-symptom onset (for more details see 'Algorithm details')."),
                                          p("Disclaimer: the results obtained from this classification are for research purposes only and should not be considered a diagnosis"),
                                          plotlyOutput("propSero")
-                                ))),
-                   
-                   # ----------------------------------
-                   # tab panel 7 - Classification details
-                   tabPanel("Algorithm details",
-                            tabsetPanel(
-                                tabPanel("PNG algorithm details",
-                                         fluidPage(
-                                             br(),
-                                             uiOutput("pngAlgorithm"))), 
-                                tabPanel("Melbourne algorithm details", "COMING SOON....")
-                            ))
-                   
+                                )))
+         
         )
 )

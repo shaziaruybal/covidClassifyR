@@ -26,7 +26,7 @@ The scripts and functions used in this application were developed by [Shazia Ruy
 
 -   Connie Li Wai Suen, WEHI (original 5-parameter logistic model development for conversion of MFI to RAU)
 
--   Narimane Nekkab and Michael White, Institut Pasteur (original development of serological classification algorithm for *Plasmodium vivax,* adapted here for *SARS-CoV-2*)
+-   Narimane Nekkab and Michael White, Institut Pasteur (original development of serological classification algorithm for *Plasmodium vivax,* adapted here for SARS-CoV-2)
 
 Many thanks to Nick Walker for trialing and providing feedback on early versions of this tool.
 

@@ -166,7 +166,7 @@ shinyServer(function(input, output, session){
     
     # Downloadable report of QC ----
     output$report <- downloadHandler(
-        filename = paste0(experiment_name(), "_", Sys.Date(), "_QCreport.html"),
+        filename = paste0(experiment_name(), "_", date(), "_QCreport.html"),
         content = function(file) {
             tempReport <- file.path(tempdir(), "template.Rmd")
             file.copy("template.Rmd", tempReport, overwrite = TRUE)
@@ -190,7 +190,7 @@ shinyServer(function(input, output, session){
     # Downloadable csv of standards ----
     output$downloadStds <- downloadHandler(
         filename = function() {
-            paste0(experiment_name(), "_", Sys.Date(), "_stdcurve.csv", sep = "")
+            paste0(experiment_name(), "_", date(), "_stdcurve.csv", sep = "")
         },
         content = function(file) {
             write.csv(readSeroData(raw_data())[[5]], file, row.names = FALSE)
@@ -200,7 +200,7 @@ shinyServer(function(input, output, session){
     # Downloadable csv of MFI/RAU results file ----
     output$downloadData <- downloadHandler(
         filename = function() {
-            paste0(experiment_name(), "_", Sys.Date(), "_MFI_RAU.csv", sep = "")
+            paste0(experiment_name(), "_", date(), "_MFI_RAU.csv", sep = "")
         },
         content = function(file) {
             write.csv(runModel(raw_data(), plate_layout())[[2]], file, row.names = FALSE)
@@ -210,7 +210,7 @@ shinyServer(function(input, output, session){
     # Downloadable csv of classification results file ----
     output$downloadSeroPNG <- downloadHandler(
         filename = function() {
-            paste0(experiment_name(), "_", Sys.Date(), "_classification_", algorithm(), ".csv", sep = "")
+            paste0(experiment_name(), "_", date(), "_classification_", algorithm(), ".csv", sep = "")
         },
 
         content = function(file) {
@@ -221,7 +221,7 @@ shinyServer(function(input, output, session){
     
     output$downloadSeroMel <- downloadHandler(
         filename = function() {
-            paste0(experiment_name(), "_", Sys.Date(), "_classification_", algorithm(), ".csv", sep = "")
+            paste0(experiment_name(), "_", date(), "_classification_", algorithm(), ".csv", sep = "")
         },
         
         content = function(file) {

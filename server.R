@@ -123,7 +123,16 @@ shinyServer(function(input, output, session){
     })
     
     sero_plot <- reactive({
-        plotProportionSero(raw_data(), plate_layout(), algorithm())
+        if(algorithm() == "PNG algorithm"){
+            
+            plotProportionSero(raw_data(), plate_layout(), algorithm(), png_rf_all, png_rf_3months, png_rf_G3months)
+        }
+        
+        else{
+            
+            plotProportionSeroMel(raw_data(), plate_layout(), algorithm(), mel_rf_all, mel_rf_3months, mel_rf_G3months)
+            
+        }
     })
     
     #### Output objects

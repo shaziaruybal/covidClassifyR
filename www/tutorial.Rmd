@@ -11,7 +11,7 @@ output:
 
 ### Before you start: preparing your data input
 
-This web application was designed fit-for-purpose to process raw serology data exported from [Luminex/Magpix machines](https://www.luminexcorp.com/xmap-technology/#instruments). For an example of the raw data output from the machine, download the [example data](https://shaziaruybal.shinyapps.io/covidClassifyR/_w_8c7cb1cd/example_data.zip). The built-in classification algorithms are applicable for those analyzing data from the SARS-CoV-2 multi-antigen Luminex assay as per [Mazhari et al (2021)](https://www.mdpi.com/2409-9279/4/4/72), however, the application can also be used to process serological data from other Luminex assay panels (e.g. for *Plasmodium vivax*) and perform quality control as well as preliminary data visualizations.
+This web application was designed fit-for-purpose to process raw serology data exported from [Luminex/Magpix machines](https://www.luminexcorp.com/xmap-technology/#instruments). For an example of the raw data output from the machine, [download the example data](https://shaziaruybal.shinyapps.io/covidClassifyR/_w_8c7cb1cd/example_data.zip). The built-in classification algorithms are applicable for those analyzing data from the SARS-CoV-2 multi-antigen Luminex assay as per [Mazhari et al (2021)](https://www.mdpi.com/2409-9279/4/4/72), however, the application can also be used to process serological data from other Luminex assay panels (e.g. for *Plasmodium vivax*) and perform quality control as well as preliminary data visualizations.
 
 #### Raw data requirements
 You can pre-program the Luminex protocol so that you can export all the raw data directly from the machine once the plate reading is completed. 

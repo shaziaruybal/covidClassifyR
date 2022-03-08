@@ -40,6 +40,7 @@ Also make sure that there are no extra cells filled out other than the plate wel
 
 If you downloaded the example plate layout, it should look like this, otherwise make sure your plate layout looks similar:
 ![](images/egplate_screenshot.png) 
+**`r fontawesome::fa("lightbulb")` Tip: ** The application expects standards to start with 'S' and blanks to start with 'B', but everything else with a label will be considered an unknown sample. If you have other types of samples, for example a positive control, you can use a different sample label to the other unknown study samples (i.e. "PositiveControl" in addition to the "ABC" study codes).
 
 ### Navigating the app
 ![](images/app_screenshot.png)
@@ -47,7 +48,7 @@ If you downloaded the example plate layout, it should look like this, otherwise 
 * *Import data:* this is where you can upload your raw data and plate layout, you can also label your experiment/project so that all your processed data files and quality control report can have the project name as an identifier. Here you can also make sure that your raw data, run info and plate layout look as expected. See the section [Importing your data](#importing-your-data) for more details.
 * *Quality control:* this is where you can perform quality control of your run and your data is run through the processing pipeline to convert median fluorescent units to relative antibody units based on the standard curves you supplied. In this section you can also download the processed data, standard curve data and a quality control report. For moe details, see the section [Quality control](#quality-control).
 * *Classification:* this is where you can run the classification algorithm on your data to determine whether unknown samples are seropositive or seronegative (i.e. recently exposed to SARS-CoV-2, or not). We have developed two algorithms that were trained on different datasets. The main difference is that the PNG algorithm included data from the COVID-PROFILE study in Melbourne to train the classifier, and so this algorithm should *not* be used if processing data from the COVID-PROFILE study in Melbourne. Note that if you are running the app for data processing of data that was not generated using the SARS-CoV-2 multi-antigen assay panel from [Mazhari et al (2021)](https://www.mdpi.com/2409-9279/4/4/72), you should skip this section. For more details, see the section [Classifying your samples](#classifying-your-samples).
-* *Data visualization:* this is where you can visualize your data interactively within the app. You can take a look at box plots of the antibody data for each antigen in your panel based on raw median fluorescent units, converted relative antibody units and if you ran the classification, you will also be able to visualize the exposure status of your samples based on the classification algorithm. 
+* *Data visualization:* this is where you can visualize your data interactively within the app. You can take a look at box plots of the antibody data for each antigen in your panel based on raw median fluorescent units, converted relative antibody units and if you ran the classification, you will also be able to visualize the exposure status of your samples based on the classification algorithm. For more details, see the section [Data visualization](#data-visualization).
 
 ### Importing your data
 
@@ -90,36 +91,48 @@ Also make sure that there are no extra cells filled out other than the plate wel
 
 In the case of the example data, the plate layout should appear as below:
 
-![](images/check_plate.png){ width=75% }
+![](images/check_plate.png){ width=75% } 
 
 **`r fontawesome::fa("lightbulb")` Tip: ** You can use the example plate layout as a template, delete the cell contents and fill in with your sample details. Make sure that the word "Plate" is included in the first column, as the app expects this in order to determine the position of each sample and match it to the raw data outputs.  
 
 ### Quality control
-This section allows you to check the quality of your Luminex run, you can navigate each tab individually and also click the "Download" tab to download your process sample data, the standard curve values and the quality control report. All of the plots in the "Quality Control" section will be included in the QC report. 
+This section allows you to check the quality of your Luminex run, you can navigate each tab individually and also click the "Download" tab to download your process sample data, the standard curve values and the quality control report. All of the plots in the "Quality Control" section will be included in the QC report when downloaded. 
 
 #### Standard curves
+
+The standard curve plots are generated from the antibody data from the standards you indicated in your plate layout (e.g. S1-S10) and median fluorescent intensity (MFI) units are displayed in log10-scale. In the case of the COVID-19 multi-antigen panel, 12 antigens will be displayed and in general your standard curves should look relatively linear. 
 
 ![](images/std_curves.png)
 
 #### Plate quality control
 
+The bead counts for each plate well are displayed, with blue indicated there are sufficient beads (>15) or red when there are not enough. If any of the wells are red, they should be double-checked manually and re-run. 
+
 ![](images/plate_qc.png)
 
 #### Blank samples
 
+The median fluorescent intensity (MFI) units for each antigen is displayed for your blank samples. In general, each blank sample should have <50 MFI for each antigen, if they are higher they should be cross-checked manually. In the example data, blank samples recorded higher MFI values for CS1H and CS2H and should be checked to confirm this is expected from the assay.
+
 ![](images/blanks.png)
+
+**`r fontawesome::fa("lightbulb")` Tip: ** If you have more than one blank sample, make sure you label them differently in your plate layout (e.g. Blank1, Blank2), otherwise the figure will display cumulative MFI values for all your blank samples, instead of each separately. 
 
 #### Model results
 
-The automated data processing in this app allows you to convert your median fluorescence units (MFI) data into relative antibody units (RAU) by fitting a 5-parameter logistic function to the standard curve on a per-antigen level.
+The automated data processing in this app allows you to convert your median fluorescence intensity (MFI) data into relative antibody units (RAU) by fitting a 5-parameter logistic function to the standard curve on a per-antigen level.
+
+The results from this log-log conversion should look relatively linear for each antigen. 
 
 ![](images/model.png)
 
 #### Sample results
 
-![](images/sample_results.png)
+The results from the data processing are displayed in an interactive table that can be explored directly within the app and/or the data can also be downloaded in .csv format in the  [Download](#downloading-your-processed-data) tab. The raw median fluorescent intensity (MFI) units and converted relative antibody units (RAU) are displayed for each antigen and for each sample. Scroll to the right to explore data for all antigens, or navigate to different pages using the numbers to view the data for all samples. 
 
-This table is interactive, and allows you to take a quick look at your processed data. For example you can use the search bar to search for a particular sample name. In the example below we filter for sample ABC036.
+![](images/sample_results.png) 
+
+You can explore the processed data directly within the app, for example you can use the search bar to search for a particular sample name. In the example below we filter for sample ABC036.
 
 ![](images/sample_results_filter.png)
 
@@ -129,34 +142,85 @@ You can also re-order specific columns and sort them from highest to lowest, or 
 
 When you are finished you can download the data and quality control report by clicking on the ['Download'](#downloading-your-processed-data) tab.
 
+**`r fontawesome::fa("lightbulb")` Tip: ** A quick check that your data processing has gone as expected is to make sure that the number of entries in your table is the same as the number of samples (excluding standards and blanks) in your plate layout, and to check that RAU values have been calculated for all of your antigens. 
+
 ### Downloading your processed data
+
+You can download your processed data by clicking on the button "Download MFI/RAU data". In some cases it may be useful to compare your standard curve data across multiple plate runs, so you can also download the standard curve data separately by clicking the button "Download standard curve data". You can also download your quality control report, which includes all of the plots in the [Quality control](#quality-control) tab as well as the information you entered in the [Import data](#importing-your-data) tab (i.e. experiment name, notes, date and uploaded files).
 
 ![](images/download_qc.png){width=75%}
 
 ### Classifying your samples
 
-![](images/classification_png.png)
+#### Classification algorithms
+The built-in classification algorithm in this application should only be applied to data generated from the COVID-19 multi-antigen panel Luminex assay [Mazhari et al 2021](https://www.mdpi.com/2409-9279/4/4/72). If you are using the application for quality control of data generated using other Luminex assays, you should not apply the classification algorithm to your data. 
 
-![](images/classification_mel.png)
+The COVID-19 multi-antigen panel was developed for research purposes as a serological tool that can detect individuals with past exposure to SARS-CoV-2 without the need for knowledge of previous exposure *a priori*. It is important to note that if samples are classified as "seropositive" or recently exposed, these classification results should only be used for research purposes and should not be considered a diagnosis. 
+
+
+By simultaneously measuring antibodies to multiple SARS-CoV-2 antigens and other viral antigens, we have leveraged these antibody measurements to train a random forest machine learning algorithm based on the combined serological signatures of multiple antigens. We trained our classification algorithms using a dataset with samples from individuals with a confirmed SARS-CoV-2 PCR positive result (positive samples) from several independent studies, as well as negative samples from various independent sources (pre-pandemic negative controls, Australian Red Cross and Victorian Blood Donor Registry samples). Given the variability in time since symptom onset and overall exposure to SARS-CoV-2 in unknown samples from epidemiological studies, we have trained three separate classifier algorithms based on different stratifications of the data: 1) negative controls and all positive samples in the data set, 2) negative controls and positive samples that were more than two weeks but up to three months post symptom onset, and 3) negative controls and positive samples collected between three and six months post symptom onset. If knowledge of time since symptom onset is known, this can be leveraged by selecting the most appropriate classifier, otherwise we recommend making an educated decision based on the results from all three classifiers. 
+
+#### Select the appropriate algorithm
+We have developed two algorithms that were trained on different datasets that included different sample sets from individuals with PCR-confirmed SARS-CoV-2 positive results. 
+
+**PNG algorithm:** The PNG algorithm should be used for data generated using the COVID-19 Luminex assay established at Papua New Guinea Institute of Medical Research (PNGIMR). This algorithm was trained on datasets that included sample sets collected from Melbourne-based studies such as the COVID-PROFILE study. The PNG algorithm has a sensitivity of 93.44-98.51% and specificity of 94.12-100% depending on the classifier.
+
+**Melbourne algorithm:** The Melbourne algorithm should be used for data generated using the COVID-19 Luminex assay established at the Walter and Eliza Hall Institute of Medical Research (WEHI) and Burnet Institute. This algorithm was trained on datasets that excluded COVID-PROFILE study samples and therefore can be used to analyse COVID-PROFILE samples.  
+
+For specific details about the PNG and Melbourne algorithms, click on the tab "Classification" and select "Algorithm details" from the drop-down menu.
+
+You can select the algorithm that is appropriate for your data by clicking on the buttons on the left panel (see below). The example data was generated using the PNG laboratory assay and therefore you should select the "PNG algorithm" for this tutorial. 
+
+![](images/classification_select.png){width=50%}
+
+#### Check your classification results
+You will notice that the "Classification results" tab has pre-populated with the classification results for the three classifiers. 
+
+The results from the classification are displayed in an interactive table that can be explored directly within the app and/or the data can also be downloaded in .csv format in the adjacent ["Download data"](#downloading-your-classification-data) tab. The exposure status (positive/negative) is displayed for each sample and for all three classifiers. Navigate to different pages using the numbers to view the data for all samples.
+
+As per above, results for the three separate classifier algorithms based on different stratifications of the data are displayed: 
+
+**1) Prediction all: ** negative controls and all positive samples in the data set
+
+**2) Prediction less than 3 months:** negative controls and positive samples that were more than two weeks but up to three months post symptom onset
+
+**3) Prediction greater than 3 months:** negative controls and positive samples collected between three and six months post symptom onset
+
+![](images/classification_png.png)
+**`r fontawesome::fa("lightbulb")` Tip: ** Make sure that your data was processed using the correct algorithm by cross-checking the "Algorithm choice", which will display the algorithm that was applied. 
+
+As above when you were exploring your processed data results, you can also explore the classification data directly within the app, for example you can use the search bar to search for all "positive" samples. In the example below we filter using the word "positive". In the tutorial example data, there was only one positive sample (ABC001) when using the "Prediction all" classifier. 
+
+![](images/classification_positive.png)
+**`r fontawesome::fa("lightbulb")` Tip: ** To form an educated guess about the positivity/exposure status for your samples, take into consideration all relevant epidemiological information that you may have available to you (e.g. time since possible exposure, timing of sampling with respect to incidence of COVID-19 infections/cases) and explore the results using the three classifiers. Remember that although the algorithms have high specificity and sensitivity, they are not 100% and so false positives/negatives may still occur. 
+
+### Downloading your classification data
+You can download your classification data by clicking on the button “Download classification data”. Make sure tht you click on the correct button depending on the algorithm you applied to your data. The downloaded .csv file will include the algorithm in the file name, which you can also cross-check to make sure the appropriate algorithm was applied to classify the data.
 
 ![](images/download.png){width=75%}
 
 ### Data visualization 
 
+This web application has in-built data visualization capabilities that allow you to explore your data. 
+
 #### MFI boxplot
+The box plots allow you to take a look at the median fluorescence intensity (MFI) values for each of the antigens in the panel. This plot is interactive and you can hover your mouse over each antigen box plot to see the min, median, max MFI and IQR values. In the example below, the mouse was hovered over the OC43 antigen. You will also notice that there are other buttons on the top right of the plot that can be used to download the plot as a png (`r fontawesome::fa("camera")`), zoom (`r fontawesome::fa("search")`), move (`r fontawesome::fa("arrows-alt")`), zoom in (`r fontawesome::fa("plus-square")`), zoom out(`r fontawesome::fa("minus-square")`), autoscale (`r fontawesome::fa("expand-arrows-alt")`), reset axes (`r fontawesome::fa("home")`). 
+
 ![](images/mfi_interactive.png)
 
 #### RAU boxplot
+The box plots allow you to take a look at the converted relative antibody units (RAU) for each of the antigens in the panel. This plot is interactive and you can hover your mouse over each antigen box plot to see the min, median, max MFI and IQR values. In the example below, the mouse was hovered over the NL63 antigen. You will also notice that there are other buttons on the top right of the plot that can be used to download the plot as a png (`r fontawesome::fa("camera")`), zoom (`r fontawesome::fa("search")`), move (`r fontawesome::fa("arrows-alt")`), zoom in (`r fontawesome::fa("plus-square")`), zoom out(`r fontawesome::fa("minus-square")`), autoscale (`r fontawesome::fa("expand-arrows-alt")`), reset axes (`r fontawesome::fa("home")`). 
 
 ![](images/rau_viz.png)
 
 #### Exposure status
+The bar chart allows you to take a look at the exposure status of your samples based on the three classifiers, where blue indicates negative samples and red shows how many samples were classified as positive. This plot is interative and you can hover your mouse over each bar to see the number of negative and positive samples for each classifier. In the example below, the mouse was hovered over the "Prediction all" classifier, where only n=1 sample was classified as positive. You will also notice that there are other buttons on the top right of the plot that can be used to download the plot as a png (`r fontawesome::fa("camera")`), zoom (`r fontawesome::fa("search")`), move (`r fontawesome::fa("arrows-alt")`), zoom in (`r fontawesome::fa("plus-square")`), zoom out(`r fontawesome::fa("minus-square")`), autoscale (`r fontawesome::fa("expand-arrows-alt")`), reset axes (`r fontawesome::fa("home")`). 
 
 ![](images/exposure_png.png)
 
-![](images/exposure_mel.png)
-
 ### Output from this tutorial
+
+If you followed along in this tutorial and downloaded your processed data, QC report and classification data, you can compare your files to the expected output from this tutorial.
 
 [Click here to download an example of the output from this tutorial](output_tutorial.zip)
 

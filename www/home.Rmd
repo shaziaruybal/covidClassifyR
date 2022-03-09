@@ -28,6 +28,6 @@ The scripts and functions used in this application were developed by [Shazia Ruy
 
 -   Narimane Nekkab and Michael White, Institut Pasteur (original development of serological classification algorithm for *Plasmodium vivax,* adapted here for SARS-CoV-2)
 
-Many thanks to Nick Walker for trialing and providing feedback on early versions of this tool.
+Many thanks to Nick Walker and Caitlin Bourke for trialing and providing feedback on this tool.
 
 We are extremely grateful to have a received funding for this work and in particular to host this web application through a [Regional Collaborations Programme COVID-19 Digital Grant](https://www.science.org.au/news-and-events/news-and-media-releases/regional-research-set-get-digital-boost) from the Australian Academy of Science and the Department of Industry, Science, Energy and Resources.

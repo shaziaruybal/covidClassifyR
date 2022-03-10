@@ -232,6 +232,6 @@ The bar chart allows you to take a look at the exposure status of your samples b
 
 If you followed along in this tutorial and downloaded your processed data, QC report and classification data, you can compare your files to the expected output from this tutorial.
 
-[Click here to download an example of the output from this tutorial](output_tutorial.zip)
+[Click here to download an example of the output from this tutorial](https://shaziaruybal.shinyapps.io/covidClassifyR/_w_8c7cb1cd/output_tutorial.zip)
 
 ### Troubleshooting

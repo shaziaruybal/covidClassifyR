@@ -5,7 +5,7 @@ output:
       bootswatch: sandstone
 ---
 
-### **covidClassifyR**: a fit-for-purpose tool to support COVID-19 sero-surveillance via serological data processing and statistical analysis
+### <img src="images/covidClassifyR_hex.png" width="10%" height="10%" align="left"/> **covidClassifyR**: a fit-for-purpose tool to support COVID-19 sero-surveillance via serological data processing and statistical analysis
 
 This analytical tool was developed to streamline the processing of serological data generated using a validated high-throughput multiplex serological assay for measuring antibodies to SARS-CoV-2 ([Mazhari et al 2021](https://doi.org/10.3390/mps4040072)). This tool also aims to make the downstream processing, quality control and interpretation of the raw data generated from this serological assay accessible to all researchers without the need for a specialist background in statistical methods and advanced programming. In addition, the data processing and quality control parts of this tool can also be used to process serological data generated using other Luminex-based assays for other organisms, e.g. *Plasmodium* spp.
 
@@ -13,7 +13,7 @@ This analytical tool was developed to streamline the processing of serological d
 #### Graphical overview of the web application:
 For details on how to use this app, follow the step-by-step tutorial.
 
-![](images/app_design.png "Application graphical overview"){width="500"}
+![](images/app_design_v2.png "Application graphical overview"){width="500"}
 
 -----------------------------------------------
 #### Acknowledgments
